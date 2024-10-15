@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { API_URL } from './constants';
 
 export const loginUser = async (username, password) => {
-  const url = 'http://localhost:8000/api/v1/auth/token';
+  const url = API_URL + '/auth/token';
 
   const formData = new URLSearchParams();
   formData.append('grant_type', 'password');
@@ -21,7 +22,6 @@ export const loginUser = async (username, password) => {
     });
 
     const data = response.data
-    console.log('Success:', response.data);
 
     const token = data.access_token;
     localStorage.setItem('jwt', token);
@@ -37,7 +37,7 @@ export const loginUser = async (username, password) => {
 
   
 export const registerUser = async (email, password) => {
-    const response = await fetch('http://localhost:8000/api/v1/auth/register', {
+    const response = await fetch(API_URL + '/auth/register', {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',

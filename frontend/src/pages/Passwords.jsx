@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {Box, Typography, IconButton, TextField, Button, Icon } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, IconButton, Button } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import LinkIcon from '@mui/icons-material/Link';
 import CommentIcon from '@mui/icons-material/Comment';
 import toast from 'react-hot-toast';
+import { API_URL } from '../services/constants';
+import { useNavigate } from 'react-router-dom';
 
 function Passwords() {
     const [passwords, setPasswords] = useState([]);
     const [error, setError] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
-
-    console.log(showPassword === false);
+    const navigate = useNavigate();
 
     const userId = localStorage.getItem('userId');
 
@@ -20,7 +21,7 @@ function Passwords() {
         const fetchPasswords = async () => {
           const token = localStorage.getItem('jwt');
           try {
-            const response = await fetch(`http://localhost:8000/users/${userId}/passwords`, {
+            const response = await fetch(API_URL + `/users/${userId}/passwords`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -29,6 +30,11 @@ function Passwords() {
             });
     
             if (!response.ok) {
+              if (response.status === 401){
+                toast.error("Please, log in once again. Your session expired")
+                navigate('/login')
+                return
+              }
               throw new Error('Failed to fetch passwords');
             }
     
@@ -41,7 +47,7 @@ function Passwords() {
         };
     
         fetchPasswords();
-    }, [userId]);
+    }, [userId, navigate]);
 
     const handleClickTogglePassword = () => {
         setShowPassword((prev) => !prev);

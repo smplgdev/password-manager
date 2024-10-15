@@ -14,7 +14,7 @@ from app.schemas.passwords import PasswordResponse, PasswordCreate
 router = APIRouter()
 
 
-@router.get("/", response_model=list[PasswordResponse])
+@router.get("", response_model=list[PasswordResponse])
 async def read_user_passwords(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: int,
@@ -38,7 +38,7 @@ async def read_user_passwords(
     return response
 
 
-@router.post("/", response_model=PasswordResponse)
+@router.post("", response_model=PasswordResponse)
 async def create_user_password(
     current_user: Annotated[User, Depends(get_current_user)],
     user_id: int,

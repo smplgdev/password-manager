@@ -18,8 +18,7 @@ function Login() {
         navigate('/passwords');
       })
       .catch((error) => {
-        console.log(error);
-        toast.error(error.toString());
+        setError(error.toString());
       })
   };
 
