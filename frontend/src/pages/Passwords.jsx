@@ -1,171 +1,94 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Button } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import LinkIcon from '@mui/icons-material/Link';
-import CommentIcon from '@mui/icons-material/Comment';
+import { Box, Typography } from '@mui/material';
 import toast from 'react-hot-toast';
 import { API_URL } from '../services/constants';
 import { useNavigate } from 'react-router-dom';
+import PasswordList from '../components/PasswordList';
+import AddPasswordButton from '../components/AddPasswordButton';
+import PasswordForm from '../components/PasswordForm';
+import axios from 'axios';
 
 function Passwords() {
-    const [passwords, setPasswords] = useState([]);
-    const [error, setError] = useState(null);
-    const [showPassword, setShowPassword] = useState(false);
-    const navigate = useNavigate();
+  const [passwords, setPasswords] = useState([])
+  const [isAdding, setIsAdding] = useState(false) // Whether a form is being added
 
-    const userId = localStorage.getItem('userId');
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-    useEffect(() => {
-        const fetchPasswords = async () => {
-          const token = localStorage.getItem('jwt');
-          try {
-            const response = await fetch(API_URL + `/users/${userId}/passwords`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`, // Attach JWT in Authorization header
-              },
-            });
-    
-            if (!response.ok) {
-              if (response.status === 401){
-                toast.error("Please, log in once again. Your session expired")
-                navigate('/login')
-                return
-              }
-              throw new Error('Failed to fetch passwords');
-            }
-    
-            const data = await response.json();
-            setPasswords(data); // Assuming the API returns an array of passwords
-            setShowPassword(false);
-          } catch (error) {
-            setError(error.message);
+  const userId = localStorage.getItem('userId')
+  const token = localStorage.getItem('jwt')
+
+  useEffect(() => {
+    const fetchPasswords = async () => {  // TODO: put this function to separate file
+      try {
+        const response = await fetch(API_URL + `/users/${userId}/passwords`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`, // Attach JWT in Authorization header
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            toast.error("Please, log in once again. Your session expired")
+            navigate('/login')
+            return
           }
-        };
-    
-        fetchPasswords();
-    }, [userId, navigate]);
+          throw new Error('Failed to fetch passwords');
+        }
 
-    const handleClickTogglePassword = () => {
-        setShowPassword((prev) => !prev);
+        const data = await response.json();
+        setPasswords(data); // Assuming the API returns an array of passwords
+      } catch (error) {
+        setError(error.message);
+      }
     };
 
-    const capitalizeFirstLetter = (string) => {
-        if (!string) return string; // Check for empty string
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    };
+    fetchPasswords();
+  }, [userId, navigate, token]);
 
-    const handleCopy = (type, text) => {
-      navigator.clipboard.writeText(text);
-      toast.success(`${capitalizeFirstLetter(type)} copied to clipboard!`);
-    };
-
-    if (error) {
-      return <Typography color="error">{error}</Typography>;
+  const handleSavePassword = async (websiteName, username, password, comment) => {
+    const formData = {
+      website_name: websiteName,
+      username: username,
+      password: password,
+      comment: comment
     }
 
-    return (
-      <Box>
-        {passwords.map((passwordObj, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              border: '1px solid lightgray',
-              borderRadius: 2,
-              p: { xs: 1, sm: 2 }, // Padding adjusts to smaller values on extra-small screens
-              mb: 2,
-              width: { xs: '95%', sm: '35rem' }, // Full width on small screens, fixed width on larger
-              margin: '20px auto',
-            }}
-          >
+    await axios.post(API_URL + `/users/${userId}/passwords`, formData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      }
+    })
+      .then(response => {
+        const data = response.data
+        setPasswords([...passwords, data])
+        setIsAdding(false); // Close the form after saving
+      })
+      .catch(error => {
+        toast.error('Error saving password:', error)
+        console.log('Error saving password:', error)
+      });
+  };
 
-            {/* Website name section */}
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 2,
-                }}
-            >
-                <LinkIcon sx={{ mr: 1 }}></LinkIcon>
-                <Typography variant="h6">{passwordObj.website_name}</Typography>
-            </Box>
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
 
-            {/* Username Section */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 2,
-              }}
-            >
-              <Box>
-                <Typography variant="subtitle2">Username</Typography>
-                <Typography variant="body1">{passwordObj.username}</Typography>
-              </Box>
-              <Button
-                variant="outlined"
-                startIcon={<ContentCopyIcon />}
-                onClick={() => handleCopy('username', passwordObj.username)}
-              >
-                Copy
-              </Button>
-            </Box>
-
-            {/* Password Section */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Box>
-                <Typography variant="subtitle2">Password</Typography>
-                <Typography variant="body1">
-                  {showPassword ? passwordObj.password : '●●●●●●●●'}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <IconButton onClick={handleClickTogglePassword} sx={{ mr: 1 }}>
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-                <Button
-                  variant="outlined"
-                  startIcon={<ContentCopyIcon />}
-                  onClick={() => handleCopy('password', passwordObj.password)}
-                >
-                  Copy
-                </Button>
-              </Box>
-            </Box>
-
-            {/* Comment Section */}
-            {passwordObj.comment && (
-                <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mt: 2,
-                }}
-                >
-                    <CommentIcon sx={{mr: 1, opacity: 0.5}}></CommentIcon>
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                        {passwordObj.comment}
-                    </Typography>
-                </Box>
-            )}
-          </Box>
-        ))}
-      </Box>
-    );
+  return (
+    <Box>
+      <PasswordList passwords={passwords} />
+      {isAdding ? (
+        <PasswordForm onSave={handleSavePassword} />
+      ) :
+        (
+          <AddPasswordButton onClick={() => setIsAdding(true)} />
+        )
+      }
+    </Box>
+  )
 };
 
 export default Passwords;

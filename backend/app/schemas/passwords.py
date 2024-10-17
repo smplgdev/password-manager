@@ -5,7 +5,7 @@ class PasswordBase(BaseModel):
     website_name: str
     username: str
     password: str
-    comment: str | None
+    comment: str | None = None
 
 
 class PasswordCreate(PasswordBase):
