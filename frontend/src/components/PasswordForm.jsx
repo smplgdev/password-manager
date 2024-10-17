@@ -1,6 +1,6 @@
-import { Box, Button, Grid2, Input, TextField, TextareaAutosize } from "@mui/material";
-import { useState } from "react";
-import { STYLES } from "../services/constants";
+import {Box, Button, Grid2, Input, TextareaAutosize} from "@mui/material";
+import {useState} from "react";
+import {STYLES} from "../services/constants";
 
 
 const PasswordForm = ({ onSave }) => {
@@ -60,7 +60,7 @@ const PasswordForm = ({ onSave }) => {
                                 maxRows={8}
                                 placeholder="Comment (optionally)"
                                 value={comment}
-                                onChange={(e) => setComment(e.target.value)} 
+                                onChange={(e) => setComment(e.target.value)}
                             />
                         </Grid2>
                     </Grid2>

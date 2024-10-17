@@ -30,3 +30,14 @@ async def create_password(db: AsyncSession, user_id: int, password: PasswordCrea
     await db.commit()
     await db.refresh(password_db)
     return password_db
+
+
+async def delete_password(db: AsyncSession, password_id: int) -> bool:
+    stmt = select(Password).where(Password.id == password_id)  # type: ignore
+    result = await db.execute(stmt)
+    password = result.scalar_one_or_none()
+    if not password:
+        return False
+    await db.delete(password)
+    await db.commit()
+    return True

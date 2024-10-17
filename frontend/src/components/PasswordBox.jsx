@@ -2,21 +2,42 @@ import { Box, IconButton, TextField, Typography } from "@mui/material"
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import LinkIcon from '@mui/icons-material/Link';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CommentIcon from '@mui/icons-material/Comment';
 import { CopyButton } from "./CopyButton";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { STYLES } from "../services/constants";
+import { API_URL, STYLES } from "../services/constants";
+import axios from "axios";
 
 
-
-const PasswordBox = ({ index, passwordObj }) => {
+const PasswordBox = ({ index, passwordObj, setReload }) => {
 
     const [showPassword, setShowPassword] = useState(false);
 
     const handleClickTogglePassword = () => {
         setShowPassword((prev) => !prev);
     };
+
+    const handleDeletePassword = async() => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this?");
+        if (confirmDelete) {
+            const token = localStorage.getItem('jwt')
+            await axios.delete(API_URL + `/users/${passwordObj.user_id}/passwords/${passwordObj.id}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(response => {
+                toast.success(response.data)
+                setReload((prev) => !prev)
+            }).catch(error => {
+                toast.error(error)
+            })
+          } else {
+            console.log("Deletion canceled");
+          }
+    }
 
     const capitalizeFirstLetter = (string) => {
         if (!string) return string; // Check for empty string
@@ -33,17 +54,27 @@ const PasswordBox = ({ index, passwordObj }) => {
             key={index}
             sx={STYLES.centeredBox}
         >
-
             {/* Website name section */}
             <Box
                 sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 2,
-                }}
-            >
-                <LinkIcon sx={{ mr: 1 }}></LinkIcon>
-                <Typography variant="h6">{passwordObj.website_name}</Typography>
+                    display: "flex",
+                    justifyContent: "space-between"
+                }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        mb: 2,
+                    }}
+                >
+                    <LinkIcon sx={{ mr: 1 }}></LinkIcon>
+                    <Typography variant="h6">{passwordObj.website_name}</Typography>
+                </Box>
+                <Box>
+                    <IconButton onClick={handleDeletePassword}>
+                        <DeleteOutlineIcon />
+                    </IconButton>
+                </Box>
             </Box>
 
             {/* Username Section */}
@@ -72,16 +103,16 @@ const PasswordBox = ({ index, passwordObj }) => {
             >
                 <Box>
                     <Typography variant="subtitle2">Password</Typography>
-                    <TextField 
-                        type={showPassword ? "text" : "password" } 
+                    <TextField
+                        type={showPassword ? "text" : "password"}
                         sx={{
                             '& .MuiOutlinedInput-root': {
-                              '& fieldset': {
-                                border: 'none', // Remove the border
-                              },
-                              '& input': {
-                                padding: 0,
-                              }
+                                '& fieldset': {
+                                    border: 'none', // Remove the border
+                                },
+                                '& input': {
+                                    padding: 0,
+                                }
                             },
                         }}
                         value={passwordObj.password}
